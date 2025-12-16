@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Study Assistant</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* Light and Dark Mode Styles */
+    body.light-mode {
+      background: #f5f6fa;
+      color: #000;
+    }
+
+    body.dark-mode {
+      background: #1e1e2f;
+      color: #f5f5f5;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: 220px;
+      padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .sidebar.light-mode {
+      background: #2c3e50;
+      color: white;
+    }
+
+    .sidebar.dark-mode {
+      background: #12121f;
+      color: #f5f5f5;
+    }
+
+    .sidebar h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar li {
+      margin: 12px 0;
+      font-size: 14px;
+    }
+
+    /* Main panel styles */
+    .main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    h1 {
+      margin-top: 0;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark-mode .card {
+      background: #2b2b3c;
+      color: #f5f5f5;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background: inherit;
+      color: inherit;
+    }
+
+    button {
+      border: none;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body class="light-mode">
+  <div class="sidebar light-mode">
+    <h2>Study Subjects</h2>
+    <ul>
+      <li>📘 Math</li>
+      <li>🔬 Science</li>
+      <li>📖 English</li>
+      <li>🇺🇸 American History</li>
+      <li>💻 Computer Science</li>
+    </ul>
+  </div>
+
+  <div class="main">
+    <h1>AI Study Assistant</h1>
+
+    <!-- Button to toggle dark/light mode -->
+    <button onclick="toggleMode()">Toggle Dark/Light Mode</button>
+
+    <!-- Assignment Input Card -->
+    <div class="card">
+      <h3>Add Assignment</h3>
+      <label>Title</label>
+      <input id="title" type="text" />
+
+      <label>Subject</label>
+      <select id="subject">
+        <option>Math</option>
+        <option>Science</option>
+        <option>English</option>
+        <option>American History</option>
+        <option>Computer Science</option>
+      </select>
+
+      <label>Due Date</label>
+      <input id="dueDate" type="date" />
+
+      <label>Due Time</label>
+      <input id="dueTime" type="time" />
+
+      <label>Difficulty (1–5)</label>
+      <input id="difficulty" type="number" min="1" max="5" />
+
+      <label>Estimated Study Time (hours)</label>
+      <input id="timeNeeded" type="number" min="0.5" step="0.5" />
+
+      <!-- Button to add assignment -->
+      <button onclick="addAssignment()">Add Assignment</button>
+    </div>
+
+    <!-- Assignment List Card -->
+    <div class="card">
+      <h3>Your Assignments</h3>
+      <div id="assignmentSections"></div>
+    </div>
+
+    <!-- Study Plan Card -->
+    <div class="card">
+      <h3>Study Plan</h3>
+      <button onclick="generatePlan()">Generate Study Plan</button>
+      <ul id="plan"></ul>
+    </div>
+  </div>
+
+  <script>
+    // Array to store assignments
+    const assignments = [];
+
+    // Function to toggle between dark mode and light mode
+    function toggleMode() {
+      document.body.classList.toggle('dark-mode');
+      document.body.classList.toggle('light-mode');
+      document.querySelector('.sidebar').classList.toggle('dark-mode');
+      document.querySelector('.sidebar').classList.toggle('light-mode');
+    }
+
+    // Function to render assignments grouped by subject
+    function renderAssignments() {
+      const container = document.getElementById('assignmentSections');
+      container.innerHTML = '';
+      const subjects = ['Math', 'Science', 'English', 'American History', 'Computer Science'];
+
+      subjects.forEach(subject => {
+        const subjectAssignments = assignments.filter(a => a.subject === subject);
+        if (subjectAssignments.length === 0) return;
+
+        const section = document.createElement('div');
+        section.innerHTML = `<h4>${subject}</h4>`;
+        const ul = document.createElement('ul');
+
+        subjectAssignments.forEach(a => {
+          const li = document.createElement('li');
+          const due = new Date(`${a.dueDate}T${a.dueTime}`); // combine date and time
+          const now = new Date();
+          const diffMs = due - now;
+          const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24)); // calculate days left
+          const urgent = diffDays <= 2; // check if assignment is urgent
+
+          // Display assignment with D-Day and urgency siren if needed
+          li.innerHTML = `<strong>${a.title}</strong> — Due in ${diffDays} day(s) at ${a.dueTime} | Difficulty: ${a.difficulty} | Time: ${a.timeNeeded}h ${urgent ? '<span style="float:right">🚨</span>' : ''}`;
+          ul.appendChild(li);
+        });
+
+        section.appendChild(ul);
+        container.appendChild(section);
+      });
+    }
+
+    // Function to add a new assignment
+    function addAssignment() {
+      const title = document.getElementById('title').value.trim();
+      const subject = document.getElementById('subject').value;
+      const dueDate = document.getElementById('dueDate').value;
+      const dueTime = document.getElementById('dueTime').value;
+      const difficulty = parseInt(document.getElementById('difficulty').value);
+      const timeNeeded = parseFloat(document.getElementById('timeNeeded').value);
+
+      if (!title || !dueDate || !dueTime || isNaN(difficulty) || isNaN(timeNeeded)) {
+        alert('Please fill out ALL fields before adding an assignment.');
+        return;
+      }
+
+      // Add assignment object to the array
+      assignments.push({ title, subject, dueDate, dueTime, difficulty, timeNeeded });
+
+      renderAssignments(); // re-render assignments
+
+      // Clear input fields after adding
+      document.getElementById('title').value = '';
+      document.getElementById('dueDate').value = '';
+      document.getElementById('dueTime').value = '';
+      document.getElementById('difficulty').value = '';
+      document.getElementById('timeNeeded').value = '';
+    }
+
+    // Function to generate a sorted study plan based on urgency and difficulty
+    function generatePlan() {
+      const plan = document.getElementById('plan');
+      plan.innerHTML = '';
+      const today = new Date();
+
+      const sorted = [...assignments].sort((a, b) => {
+        const daysA = (new Date(`${a.dueDate}T${a.dueTime}`) - today) / (1000 * 60 * 60 * 24);
+        const daysB = (new Date(`${b.dueDate}T${b.dueTime}`) - today) / (1000 * 60 * 60 * 24);
+        if (daysA !== daysB) return daysA - daysB; // sort by urgency
+        return b.difficulty - a.difficulty; // then by difficulty
+      });
+
+      sorted.forEach(a => {
+        const li = document.createElement('li');
+        li.textContent = `${a.title} (${a.subject}) – Difficulty: ${a.difficulty} – Time: ${a.timeNeeded}h`;
+        plan.appendChild(li);
+      });
+    }
+  </script>
+</body>
+</html>
